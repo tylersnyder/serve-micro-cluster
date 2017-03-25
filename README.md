@@ -24,13 +24,25 @@ Define a `rules.json` file. If your file has a name other than `rules`, use the 
       "pathname": "/accounts",
       "dest": "./services/accounts/index.js"
     },
-    {
-      "pathname": "/products",
-      "dest": "./services/products/index.js"
-    }
+    ...
   ]
 }
 ```
+
+You can also define `port` and `env` variables:
+
+```
+{
+  "rules": [
+    {
+      ...
+      "port": 4000,
+      "env": {
+        "SECRET_KEY": "supersecret"
+      }
+    }
+}
+
 
 Once your rules are defined, you can start your microservices and proxy server using `serve-micro-cluster`.
 
