@@ -45,3 +45,6 @@ The following options are available:
  - `-h`, `--host` (`localhost`)
  - `-p`, `--port` (`3000`)
  - `-f`, `--file` (`rules.json`)
+
+### Example
+See [`serve-micro-cluster-example`](https://github.com/tylersnyder/serve-micro-cluster-example).
