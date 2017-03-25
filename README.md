@@ -1,4 +1,4 @@
-# serve-micro-cluster example
+# serve-micro-cluster
 Easily start a local cluster of [`micro`](https://github.com/zeit/micro)-based services using a simple `rules.json` file. It's like *Path Aliasing* on [now](https://zeit.co/now), but for local development.
 
 ### Installation
