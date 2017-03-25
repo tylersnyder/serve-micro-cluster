@@ -42,6 +42,7 @@ You can also define `port` and `env` variables:
       }
     }
 }
+```
 
 
 Once your rules are defined, you can start your microservices and proxy server using `serve-micro-cluster`.
