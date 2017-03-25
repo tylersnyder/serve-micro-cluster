@@ -5,8 +5,9 @@ const getPort = require('get-port')
 const { createServer } = require('http')
 const { createProxyServer } = require('http-proxy')
 const micro = require('micro')
-const { resolve } = require('path')
+const { dirname, resolve } = require('path')
 const { parse } = require('url')
+const { spawn } = require('child_process')
 const { version } = require('../package')
 
 program
@@ -30,12 +31,21 @@ async function startServers(rules) {
   return new Promise((res, rej) => {
     rules.map(async(rule) => {
       const { pathname, dest } = rule
-      const port = await getPort()
-      const module = require(resolve(dest))
-      const service = micro(module)
+      const port = rule.port || await getPort()
+
+      const env = rule.env
+                ? Object.assign({}, process.env, rule.env)
+                : process.env
+
+      const path = resolve(dirname(file), dest)
+      
+      await spawn('micro', ['--port', port, path], {
+        env
+      }).on('error', (err) => {
+        console.log(`Error: ${err.message}`)
+      })
 
       services[pathname] = { port }
-      service.listen(port)
       console.log(`${pathname} listening on ${host}:${port}`)
       res()
     })
