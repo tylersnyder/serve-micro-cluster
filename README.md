@@ -55,9 +55,9 @@ Once your rules are defined, you can start your microservices and proxy server u
 
 The following options are available:
 
- - `-h`, `--host` (`localhost`)
- - `-p`, `--port` (`3000`)
- - `-f`, `--file` (`rules.json`)
+ - `-h`, `--host` (default `localhost`)
+ - `-p`, `--port` (default `3000`)
+ - `-f`, `--file` (default `rules.json`)
 
 ### Example
 See [`serve-micro-cluster-example`](https://github.com/tylersnyder/serve-micro-cluster-example).
