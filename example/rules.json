@@ -1,0 +1,16 @@
+{
+  "rules": [
+    {
+      "pathname": "/one",
+      "dest": "./services/one/index.js"
+    },
+    {
+      "pathname": "/two",
+      "dest": "./services/two/index.js",
+      "port": "4000",
+      "env": {
+        "SECRET_KEY": "supersecret"
+      }
+    }
+  ]
+}

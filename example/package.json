@@ -1,0 +1,15 @@
+{
+  "name": "example",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "micro": "^7.3.0"
+  },
+  "devDependencies": {
+    "serve-micro-cluster": "^2.0.0"
+  },
+  "scripts": {
+    "start": "serve-micro-cluster"
+  }
+}
