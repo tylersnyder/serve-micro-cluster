@@ -25,7 +25,15 @@ main()
   })
 })
 
-async function startServices(file, services) {
+async function spawnPlatformProcess(args, opts) {
+  if (process.platform.includes('win32')) {
+    return await spawn('cmd', ['/s', '/c', 'micro', ...args], opts)
+  } else {
+    return await spawn('micro', args, opts)
+  }
+}
+
+async function startServices(file, services = {}) {
   const { rules } = require(resolve(file))
 
   return new Promise(done => {
@@ -39,23 +47,14 @@ async function startServices(file, services) {
 
       const path = resolve(dirname(file), dest)
       const args = ['--port', port, path]
-      
-      if (process.platform.includes('win32')) {
-        var cmd = await spawn('cmd', ['/s', '/c', 'micro', ...args], {
-          env
-        })
-      } else {
-        var cmd = await spawn('micro', args, {
-          env
-        })
-      }
+      const cmd = await spawnPlatformProcess(args, { env })
 
       cmd.on('error', (err) => {
         console.log(`Error: ${err.message}`)
       })
 
       services[pathname] = { pathname, port }
-      done()
+      done(services)
     })
   })
 }
@@ -101,11 +100,8 @@ async function startProxy(host, port, services) {
 
 async function main() {
   const { host = 'localhost', port = 3000, file = 'rules.json' } = program
-  const services = {}
-
-  await startServices(file, services)
+  const services = await startServices(file, {})
   await startProxy(host, port, services)
-
   output(host, port, services)
 }
 
