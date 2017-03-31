@@ -60,4 +60,4 @@ The following options are available:
  - `-f`, `--file` (default `rules.json`)
 
 ### Example
-See [`serve-micro-cluster-example`](https://github.com/tylersnyder/serve-micro-cluster-example).
+See [`serve-micro-cluster/example`](https://github.com/tylersnyder/serve-micro-cluster/tree/master/example).
