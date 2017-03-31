@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+const { cyan, green } = require('chalk')
 const program = require('commander')
 const getPort = require('get-port')
 const { createServer } = require('http')
@@ -17,9 +18,6 @@ program
 .option('-f, --file <file>', 'File to read rules from (rules.json)')
 .parse(process.argv)
 
-const { host = 'localhost', port = 3000, file = 'rules.json' } = program
-const services = {}
-
 main()
 .catch(err => {
   process.nextTick(() => {
@@ -27,8 +25,10 @@ main()
   })
 })
 
-async function startServers(rules) {
-  return new Promise((res, rej) => {
+async function startServices(file, services) {
+  const { rules } = require(resolve(file))
+
+  return new Promise(done => {
     rules.map(async(rule) => {
       const { pathname, dest } = rule
       const port = rule.port || await getPort()
@@ -38,53 +38,89 @@ async function startServers(rules) {
                 : process.env
 
       const path = resolve(dirname(file), dest)
+      const args = ['--port', port, path]
       
-      await spawn('micro', ['--port', port, path], {
-        env
-      }).on('error', (err) => {
+      if (process.platform.includes('win32')) {
+        var cmd = await spawn('cmd', ['/s', '/c', 'micro', ...args], {
+          env
+        })
+      } else {
+        var cmd = await spawn('micro', args, {
+          env
+        })
+      }
+
+      cmd.on('error', (err) => {
         console.log(`Error: ${err.message}`)
       })
 
-      services[pathname] = { port }
-      console.log(`${pathname} listening on ${host}:${port}`)
-      res()
+      services[pathname] = { pathname, port }
+      done()
     })
   })
 }
 
-async function main() {
-  const { rules } = require(resolve(file))
-  await startServers(rules)
+async function startProxy(host, port, services) {
+  return new Promise(done => {
+    const proxy = createProxyServer()
 
-  const proxy = createProxyServer()
-
-  const server = createServer(async(req, res) => {
-    try {
-      const { pathname } = parse(req.url)
-      const { port } = match(pathname)
-
-      if (!port) {
-        const err = micro.createError(404, 'not found')
-        throw err
+    proxy.on('proxyRes', (proxyRes, req, res) => {
+      const { origin } = req.headers
+      
+      if (origin) {
+        res.setHeader('access-control-allow-origin', origin)
       }
+    })
 
-      proxy.web(req, res, {
-        target: {
-          host,
-          port
+    const server = createServer(async(req, res) => {
+      try {
+        const { pathname } = parse(req.url)
+        const { port } = match(pathname, services)
+
+        if (!port) {
+          const err = micro.createError(404, 'not found')
+          throw err
         }
-      })
-    } catch(err) {
-      res.writeHead(err.statusCode)
-      res.end(err.message)
-    }
-  })
 
-  server.listen(port)
-  console.log(`> \u001b[96mReady!\u001b[39m Proxy listening on ${host}:${port}.`)
+        proxy.web(req, res, {
+          target: {
+            host,
+            port
+          }
+        })
+      } catch(err) {
+        res.writeHead(err.statusCode)
+        res.end(err.message)
+      }
+    })
+
+    server.listen(port)
+    done({ host, port })
+  })
 }
 
-const match = pathname => {
+async function main() {
+  const { host = 'localhost', port = 3000, file = 'rules.json' } = program
+  const services = {}
+
+  await startServices(file, services)
+  await startProxy(host, port, services)
+
+  output(host, port, services)
+}
+
+function output(host, port, services) {
+  console.log(`Cluster proxy listening on ${host}:${port}...`)
+
+  Object.keys(services).forEach(key => {
+    const { pathname, port } = services[key]
+    console.log(`${cyan(pathname)} (${host}:${port})`)
+  })
+
+  console.log(`> ${green('Ready!')}`)
+}
+
+const match = (pathname, services) => {
   const shouldTrim = pathname.endsWith('/')
   const query = shouldTrim ? pathname.slice(0, -1) : pathname
   const service = services[query]

@@ -5,6 +5,7 @@
   "main": "bin/index.js",
   "license": "MIT",
   "dependencies": {
+    "chalk": "^1.1.3",
     "commander": "^2.9.0",
     "get-port": "^3.0.0",
     "http-proxy": "^1.16.2",
