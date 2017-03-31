@@ -18,7 +18,7 @@ program
 .option('-f, --file <file>', 'File to read rules from (rules.json)')
 .parse(process.argv)
 
-main()
+main(program)
 .catch(err => {
   process.nextTick(() => {
     throw err
@@ -98,8 +98,7 @@ async function startProxy(host, port, services) {
   })
 }
 
-async function main() {
-  const { host = 'localhost', port = 3000, file = 'rules.json' } = program
+async function main({ host = 'localhost', port = 3000, file = 'rules.json' }) {
   const services = await startServices(file, {})
   await startProxy(host, port, services)
   output(host, port, services)
