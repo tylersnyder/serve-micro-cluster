@@ -18,22 +18,14 @@ program
 .option('-f, --file <file>', 'File to read rules from (rules.json)')
 .parse(process.argv)
 
-main(program)
+main()
 .catch(err => {
   process.nextTick(() => {
     throw err
   })
 })
 
-async function spawnPlatformProcess(args, opts) {
-  if (process.platform.includes('win32')) {
-    return await spawn('cmd', ['/s', '/c', 'micro', ...args], opts)
-  } else {
-    return await spawn('micro', args, opts)
-  }
-}
-
-async function startServices(file, services = {}) {
+async function startServices(file, services) {
   const { rules } = require(resolve(file))
 
   return new Promise(done => {
@@ -47,14 +39,23 @@ async function startServices(file, services = {}) {
 
       const path = resolve(dirname(file), dest)
       const args = ['--port', port, path]
-      const cmd = await spawnPlatformProcess(args, { env })
+      
+      if (process.platform.includes('win32')) {
+        var cmd = await spawn('cmd', ['/s', '/c', 'micro', ...args], {
+          env
+        })
+      } else {
+        var cmd = await spawn('micro', args, {
+          env
+        })
+      }
 
       cmd.on('error', (err) => {
         console.log(`Error: ${err.message}`)
       })
 
       services[pathname] = { pathname, port }
-      done(services)
+      done()
     })
   })
 }
@@ -98,9 +99,13 @@ async function startProxy(host, port, services) {
   })
 }
 
-async function main({ host = 'localhost', port = 3000, file = 'rules.json' }) {
-  const services = await startServices(file, {})
+async function main() {
+  const { host = 'localhost', port = 3000, file = 'rules.json' } = program
+  const services = {}
+
+  await startServices(file, services)
   await startProxy(host, port, services)
+
   output(host, port, services)
 }
 
@@ -115,9 +120,35 @@ function output(host, port, services) {
   console.log(`> ${green('Ready!')}`)
 }
 
+const sanitize = pathname => {
+  let query = pathname.trim()
+  
+  if (pathname.startsWith('/')) {
+    query = query.substring(1)
+  }
+
+  if (pathname.endsWith('/')) {
+    query = query.slice(0, -1)
+  }
+  
+  return query
+}
+
 const match = (pathname, services) => {
-  const shouldTrim = pathname.endsWith('/')
-  const query = shouldTrim ? pathname.slice(0, -1) : pathname
-  const service = services[query]
-  return service || {}
+  let query = sanitize(pathname)
+
+  if (query.includes('/')) {
+    query = query.split('/')[0]
+  }
+
+  const key = Object.keys(services).find(key => {
+    if (key.includes('**')) {
+      const sanitizedKey = key.replace('**', '')
+      return sanitizedKey === `/${query}`
+    }
+  
+    return key === `/${query}`
+  })
+
+  return services[key] || {}
 }
