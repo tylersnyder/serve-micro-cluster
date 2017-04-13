@@ -60,4 +60,8 @@ The following options are available:
  - `-f`, `--file` (default `rules.json`)
 
 ### Example
-See [`serve-micro-cluster/example`](https://github.com/tylersnyder/serve-micro-cluster/tree/master/example).
+See [serve-micro-cluster/example](https://github.com/tylersnyder/serve-micro-cluster/tree/master/example).
+
+### Alternatives
+ - [dev-gateway](https://github.com/dimapaloskin/dev-gateway) Local development cluster with "now" path aliases syntax support. Allows running multiple microservices as one solid server.
+ - [micro-cluster](https://github.com/zeit/micro-cluster) - Run multiple micro servers and a front proxy at a time
